@@ -18,11 +18,13 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -226,6 +228,47 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         removeInfiniteTracker(block);
     }
     
+    public static Location getHandScreenLocation(Location loc, boolean offhand)
+    {
+        Location spawnFrom = loc.clone();
+        Vector normal2D = spawnFrom.getDirection().clone().setY(0).normalize()
+                .rotateAroundY((offhand ? 1 : -1) * (Math.PI / 2))
+                .multiply(0.40).setY(-0.35);
+        spawnFrom.add(normal2D);
+        spawnFrom.add(loc.getDirection().clone().multiply(-0.3));
+        return spawnFrom;
+    }
+    
+    public static void displayParticles(Location from, Block to, boolean infinite)
+    {
+        Location center = to.getLocation().add(0.5, 0.5, 0.5);
+        double distance = from.distance(center);
+        Vector direction = center.toVector().subtract(from.toVector()).normalize();
+        Vector step = direction.multiply(0.3);
+        
+        double distanceProgress = 0.0;
+        Location current = from.clone();
+        while(distanceProgress < distance)
+        {
+            current.getWorld().spawnParticle(Particle.REDSTONE, current, 0, new Particle.DustOptions(Color.GRAY, 0.5F));
+            distanceProgress += 0.3;
+            current.add(step);
+        }
+        
+        for(int x = to.getX(); x <= to.getX() + 1; x++)
+        {
+            for(int y = to.getY(); y <= to.getY() + 1; y++)
+            {
+                for(int z = to.getZ(); z <= to.getZ() + 1; z++)
+                {
+                    to.getWorld().spawnParticle(Particle.REDSTONE,
+                            new Location(to.getWorld(), x, y, z), 0,
+                            new Particle.DustOptions(infinite ? Color.LIME : Color.RED, 1.2F));
+                }
+            }
+        }
+    }
+    
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event)
     {
@@ -255,12 +298,16 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
                     removeInfinite(target);
                     event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
                             SoundCategory.MASTER, 1.0F, 0.6F);
+                    displayParticles(getHandScreenLocation(event.getPlayer().getEyeLocation(),
+                            event.getHand() == EquipmentSlot.OFF_HAND), target, false);
                 }
                 else
                 {
                     makeInfinite(target);
                     event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
                             SoundCategory.MASTER, 1.0F, 1.0F);
+                    displayParticles(getHandScreenLocation(event.getPlayer().getEyeLocation(),
+                            event.getHand() == EquipmentSlot.OFF_HAND), target, true);
                 }
             }
         }
