@@ -1,0 +1,12 @@
+name: InfiniteDispensers
+version: ${project.version}
+main: com.darkender.plugins.infinitedispensers.InfiniteDispensers
+api-version: 1.14
+author: Techdoodle
+softdepend:
+  - ProtocolLib
+commands:
+  infinitedispensers:
+    aliases:
+      - infdisp
+    permission: infinitedispensers.cmd
