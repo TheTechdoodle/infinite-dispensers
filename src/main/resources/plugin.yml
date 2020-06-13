@@ -10,3 +10,17 @@ commands:
     aliases:
       - infdisp
     permission: infinitedispensers.cmd
+    usage: "/infdisp [give|get|toggle]"
+permissions:
+  infinitedispensers.cmd:
+    default: op
+    description: Permission to run the command
+  infinitedispensers.give:
+    default: op
+    description: Permission to give items to others
+  infinitedispensers.get:
+    default: op
+    description: Permission to get items
+  infinitedispensers.toggle:
+    default: op
+    description: Permission to toggle infinite dispensers

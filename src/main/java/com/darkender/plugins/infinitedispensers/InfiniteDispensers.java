@@ -319,6 +319,11 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         if((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)
                 && isWand(event.getItem()))
         {
+            if(!event.getPlayer().hasPermission("infinitedispensers.toggle"))
+            {
+                event.getPlayer().sendMessage(ChatColor.RED + "No permission!");
+                return;
+            }
             event.setCancelled(true);
             toggleTarget(event.getPlayer(), event.getHand() == EquipmentSlot.OFF_HAND, event.getClickedBlock());
         }

@@ -45,10 +45,21 @@ public class InfiniteDispensersCommand implements CommandExecutor, TabCompleter
                     return true;
                 }
                 Player p = (Player) sender;
+                if(!sender.hasPermission("infinitedispensers.get"))
+                {
+                    sender.sendMessage(ChatColor.RED + "No permission!");
+                    return true;
+                }
                 p.getInventory().addItem(getInfinite(args.length >= 2 ? args[1] : ""));
                 break;
             }
             case "give":
+            {
+                if(!sender.hasPermission("infinitedispensers.give"))
+                {
+                    sender.sendMessage(ChatColor.RED + "No permission!");
+                    return true;
+                }
                 if(args.length < 2)
                 {
                     sender.sendMessage(ChatColor.RED + "No player specified!");
@@ -63,11 +74,17 @@ public class InfiniteDispensersCommand implements CommandExecutor, TabCompleter
                 to.getInventory().addItem(getInfinite(args.length >= 3 ? args[2] : ""));
                 sender.sendMessage(ChatColor.GREEN + "Gave item to " + to.getName());
                 break;
+            }
             case "toggle":
             {
                 if(!(sender instanceof Player))
                 {
                     sender.sendMessage(ChatColor.RED + "This command must be used by a player");
+                    return true;
+                }
+                if(!sender.hasPermission("infinitedispensers.toggle"))
+                {
+                    sender.sendMessage(ChatColor.RED + "No permission!");
                     return true;
                 }
                 Player p = (Player) sender;
@@ -124,9 +141,18 @@ public class InfiniteDispensersCommand implements CommandExecutor, TabCompleter
         List<String> options = new ArrayList<>();
         if(args.length == 1)
         {
-            options.add("get");
-            options.add("give");
-            options.add("toggle");
+            if(sender.hasPermission("infinitedispensers.give"))
+            {
+                options.add("give");
+            }
+            if(sender.hasPermission("infinitedispensers.get"))
+            {
+                options.add("get");
+            }
+            if(sender.hasPermission("infinitedispensers.toggle"))
+            {
+                options.add("toggle");
+            }
         }
         else if(args.length == 2)
         {
