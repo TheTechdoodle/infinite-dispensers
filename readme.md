@@ -5,7 +5,7 @@ Commands:
    The base command
    - /infdisp get [wand|dispenser|dropper]\
    Gets the specified item
-   - /infdisp give <name> [wand|dispenser|dropper]\
+   - /infdisp give \<name\> [wand|dispenser|dropper]\
    Gives the item to the specified player
    - /infdisp toggle\
    Toggles the dispenser you're looking at
