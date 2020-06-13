@@ -188,7 +188,16 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         ItemStack infinite = new ItemStack(material, 1);
         ItemMeta meta = infinite.getItemMeta();
         meta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-        meta.setDisplayName(ChatColor.GOLD + "Infinite Dispenser");
+        String name = "Container";
+        if(material == Material.DROPPER)
+        {
+            name = "Dropper";
+        }
+        else if(material == Material.DISPENSER)
+        {
+            name = "Dispenser";
+        }
+        meta.setDisplayName(ChatColor.GOLD + "Infinite " + name);
         meta.getPersistentDataContainer().set(isInfiniteKey, PersistentDataType.BYTE, (byte) 1);
         infinite.setItemMeta(meta);
         return infinite;
@@ -269,6 +278,41 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         }
     }
     
+    public void toggleTarget(Player from, boolean offhand, Block block)
+    {
+        Block target;
+        if(block != null)
+        {
+            target = block;
+        }
+        else
+        {
+            target = from.rayTraceBlocks(DISPENSER_RADIUS, FluidCollisionMode.NEVER).getHitBlock();
+        }
+    
+        if(target == null || (target.getType() != Material.DISPENSER && target.getType() != Material.DROPPER))
+        {
+            from.sendMessage(ChatColor.RED + "No dispenser or dropper in range!");
+        }
+        else
+        {
+            if(isInfinite(target))
+            {
+                removeInfinite(target);
+                from.playSound(from.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
+                        SoundCategory.MASTER, 1.0F, 0.6F);
+                displayParticles(getHandScreenLocation(from.getEyeLocation(), offhand), target, false);
+            }
+            else
+            {
+                makeInfinite(target);
+                from.playSound(from.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
+                        SoundCategory.MASTER, 1.0F, 1.0F);
+                displayParticles(getHandScreenLocation(from.getEyeLocation(), offhand), target, true);
+            }
+        }
+    }
+    
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event)
     {
@@ -276,40 +320,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
                 && isWand(event.getItem()))
         {
             event.setCancelled(true);
-            
-            Block target;
-            if(event.getClickedBlock() != null)
-            {
-                target = event.getClickedBlock();
-            }
-            else
-            {
-                target = event.getPlayer().rayTraceBlocks(DISPENSER_RADIUS, FluidCollisionMode.NEVER).getHitBlock();
-            }
-            
-            if(target == null || (target.getType() != Material.DISPENSER && target.getType() != Material.DROPPER))
-            {
-                event.getPlayer().sendMessage(ChatColor.RED + "No dispenser or dropper in range!");
-            }
-            else
-            {
-                if(isInfinite(target))
-                {
-                    removeInfinite(target);
-                    event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
-                            SoundCategory.MASTER, 1.0F, 0.6F);
-                    displayParticles(getHandScreenLocation(event.getPlayer().getEyeLocation(),
-                            event.getHand() == EquipmentSlot.OFF_HAND), target, false);
-                }
-                else
-                {
-                    makeInfinite(target);
-                    event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
-                            SoundCategory.MASTER, 1.0F, 1.0F);
-                    displayParticles(getHandScreenLocation(event.getPlayer().getEyeLocation(),
-                            event.getHand() == EquipmentSlot.OFF_HAND), target, true);
-                }
-            }
+            toggleTarget(event.getPlayer(), event.getHand() == EquipmentSlot.OFF_HAND, event.getClickedBlock());
         }
     }
     
