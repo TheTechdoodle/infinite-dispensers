@@ -24,6 +24,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -287,7 +288,15 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         }
         else
         {
-            target = from.rayTraceBlocks(DISPENSER_RADIUS, FluidCollisionMode.NEVER).getHitBlock();
+            RayTraceResult result = from.rayTraceBlocks(DISPENSER_RADIUS, FluidCollisionMode.NEVER);
+            if(result == null)
+            {
+                target = null;
+            }
+            else
+            {
+                target = result.getHitBlock();
+            }
         }
     
         if(target == null || (target.getType() != Material.DISPENSER && target.getType() != Material.DROPPER))
