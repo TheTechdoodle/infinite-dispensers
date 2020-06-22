@@ -1,5 +1,6 @@
 package com.darkender.plugins.infinitedispensers;
 
+import com.darkender.plugins.persistentblockmetadataapi.LoadUnloadTypeChecker;
 import com.darkender.plugins.persistentblockmetadataapi.MetadataWorldTrackObserver;
 import com.darkender.plugins.persistentblockmetadataapi.PersistentBlockMetadataAPI;
 import com.darkender.plugins.persistentblockmetadataapi.WorldTrackingModule;
@@ -10,6 +11,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -51,19 +53,28 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         worldTrackingModule.setMetadataWorldTrackObserver(new MetadataWorldTrackObserver()
         {
             @Override
-            public void onBreak(Block block)
+            public void onBreak(Block block, Event event)
             {
                 removeInfiniteTracker(block);
             }
     
             @Override
-            public void onMove(Block from, Block to)
+            public void onMove(Block from, Block to, Event event)
             {
                 if(infiniteDispensers.containsKey(from.getWorld()))
                 {
                     removeInfiniteTracker(from);
                     infiniteDispensers.get(from.getWorld()).add(new InfiniteDispenserBlock(to));
                 }
+            }
+        });
+        
+        persistentBlockMetadataAPI.setLoadUnloadTypeChecker(new LoadUnloadTypeChecker()
+        {
+            @Override
+            public boolean shouldRemove(Block block, PersistentDataContainer persistentDataContainer)
+            {
+                return (block.getType() != Material.DISPENSER && block.getType() != Material.DROPPER);
             }
         });
         
@@ -206,7 +217,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     
     public void makeInfinite(Block block)
     {
-        PersistentDataContainer container = persistentBlockMetadataAPI.getContainer(block);
+        PersistentDataContainer container = persistentBlockMetadataAPI.get(block);
         container.set(isInfiniteKey, PersistentDataType.BYTE, (byte) 1);
         persistentBlockMetadataAPI.set(block, container);
         if(!infiniteDispensers.containsKey(block.getWorld()))
