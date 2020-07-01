@@ -1,17 +1,14 @@
 package com.darkender.plugins.infinitedispensers;
 
-import com.darkender.plugins.persistentblockmetadataapi.LoadUnloadTypeChecker;
-import com.darkender.plugins.persistentblockmetadataapi.MetadataWorldTrackObserver;
-import com.darkender.plugins.persistentblockmetadataapi.PersistentBlockMetadataAPI;
-import com.darkender.plugins.persistentblockmetadataapi.WorldTrackingModule;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
+import org.bukkit.block.TileState;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -23,7 +20,6 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.RayTraceResult;
@@ -36,7 +32,6 @@ import java.util.Set;
 
 public class InfiniteDispensers extends JavaPlugin implements Listener
 {
-    private PersistentBlockMetadataAPI persistentBlockMetadataAPI;
     private static NamespacedKey isInfiniteKey, isWandKey, isDisplaySlimeKey;
     private HashMap<World, Set<InfiniteDispenserBlock>> infiniteDispensers;
     private final static double DISPENSER_RADIUS = 30.0;
@@ -48,35 +43,6 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
         isInfiniteKey = new NamespacedKey(this, "is-infinite");
         isWandKey = new NamespacedKey(this, "is-wand");
         isDisplaySlimeKey = new NamespacedKey(this, "is-display-slime");
-        persistentBlockMetadataAPI = new PersistentBlockMetadataAPI(this);
-        WorldTrackingModule worldTrackingModule = new WorldTrackingModule(this, persistentBlockMetadataAPI);
-        worldTrackingModule.setMetadataWorldTrackObserver(new MetadataWorldTrackObserver()
-        {
-            @Override
-            public void onBreak(Block block, Event event)
-            {
-                removeInfiniteTracker(block);
-            }
-    
-            @Override
-            public void onMove(Block from, Block to, Event event)
-            {
-                if(infiniteDispensers.containsKey(from.getWorld()))
-                {
-                    removeInfiniteTracker(from);
-                    infiniteDispensers.get(from.getWorld()).add(new InfiniteDispenserBlock(to));
-                }
-            }
-        });
-        
-        persistentBlockMetadataAPI.setLoadUnloadTypeChecker(new LoadUnloadTypeChecker()
-        {
-            @Override
-            public boolean shouldRemove(Block block, PersistentDataContainer persistentDataContainer)
-            {
-                return (block.getType() != Material.DISPENSER && block.getType() != Material.DROPPER);
-            }
-        });
         
         InfiniteDispensersCommand infiniteDispensersCommand = new InfiniteDispensersCommand(this);
         getCommand("infinitedispensers").setExecutor(infiniteDispensersCommand);
@@ -169,7 +135,12 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     
     public boolean isInfinite(Block block)
     {
-        return persistentBlockMetadataAPI.has(block);
+        if(block.getState() instanceof TileState)
+        {
+            TileState tile = (TileState) block.getState();
+            return tile.getPersistentDataContainer().has(isInfiniteKey, PersistentDataType.BYTE);
+        }
+        return false;
     }
     
     public static Slime spawnDisplaySlime(Block block)
@@ -217,14 +188,18 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     
     public void makeInfinite(Block block)
     {
-        PersistentDataContainer container = persistentBlockMetadataAPI.get(block);
-        container.set(isInfiniteKey, PersistentDataType.BYTE, (byte) 1);
-        persistentBlockMetadataAPI.set(block, container);
-        if(!infiniteDispensers.containsKey(block.getWorld()))
+        if(block.getState() instanceof TileState)
         {
-            infiniteDispensers.put(block.getWorld(), new HashSet<>());
+            TileState tile = (TileState) block.getState();
+            tile.getPersistentDataContainer().set(isInfiniteKey, PersistentDataType.BYTE, (byte) 1);
+            tile.update();
+            
+            if(!infiniteDispensers.containsKey(block.getWorld()))
+            {
+                infiniteDispensers.put(block.getWorld(), new HashSet<>());
+            }
+            infiniteDispensers.get(block.getWorld()).add(new InfiniteDispenserBlock(block));
         }
-        infiniteDispensers.get(block.getWorld()).add(new InfiniteDispenserBlock(block));
     }
     
     public void removeInfiniteTracker(Block block)
@@ -245,8 +220,13 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     
     public void removeInfinite(Block block)
     {
-        persistentBlockMetadataAPI.remove(block);
-        removeInfiniteTracker(block);
+        if(block.getState() instanceof TileState)
+        {
+            TileState tile = (TileState) block.getState();
+            tile.getPersistentDataContainer().remove(isInfiniteKey);
+            tile.update();
+            removeInfiniteTracker(block);
+        }
     }
     
     public static Location getHandScreenLocation(Location loc, boolean offhand)
@@ -387,17 +367,21 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     
     private void checkChunk(Chunk chunk)
     {
-        Set<Block> blocks = persistentBlockMetadataAPI.getMetadataLocations(chunk);
-        if(blocks != null)
+        for(BlockState state : chunk.getTileEntities())
         {
-            if(!infiniteDispensers.containsKey(chunk.getWorld()))
+            if(!(state instanceof TileState))
             {
-                infiniteDispensers.put(chunk.getWorld(), new HashSet<>());
+                continue;
             }
-        
-            for(Block block : blocks)
+            
+            TileState tile = (TileState) state;
+            if(tile.getPersistentDataContainer().has(isInfiniteKey, PersistentDataType.BYTE))
             {
-                infiniteDispensers.get(chunk.getWorld()).add(new InfiniteDispenserBlock(block));
+                if(!infiniteDispensers.containsKey(chunk.getWorld()))
+                {
+                    infiniteDispensers.put(chunk.getWorld(), new HashSet<>());
+                }
+                infiniteDispensers.get(chunk.getWorld()).add(new InfiniteDispenserBlock(state.getBlock()));
             }
         }
     }

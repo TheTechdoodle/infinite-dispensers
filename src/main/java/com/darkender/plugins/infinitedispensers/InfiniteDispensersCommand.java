@@ -10,8 +10,6 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.StringUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +25,7 @@ public class InfiniteDispensersCommand implements CommandExecutor, TabCompleter
     }
     
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
         if(args.length < 1)
         {
@@ -134,9 +132,8 @@ public class InfiniteDispensersCommand implements CommandExecutor, TabCompleter
         }
     }
     
-    @Nullable
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args)
     {
         List<String> options = new ArrayList<>();
         if(args.length == 1)
