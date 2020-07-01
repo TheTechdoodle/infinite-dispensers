@@ -10,10 +10,10 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
@@ -337,6 +337,39 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
             makeInfinite(event.getBlock());
             event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
                     SoundCategory.MASTER, 1.0F, 1.0F);
+        }
+    }
+    
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    private void onBlockBreak(BlockBreakEvent event)
+    {
+        if(isInfinite(event.getBlock()))
+        {
+            removeInfiniteTracker(event.getBlock());
+        }
+    }
+    
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    private void onBlockExplode(BlockExplodeEvent event)
+    {
+        for(Block check : event.blockList())
+        {
+            if(isInfinite(check))
+            {
+                removeInfiniteTracker(check);
+            }
+        }
+    }
+    
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    private void onEntityExplode(EntityExplodeEvent event)
+    {
+        for(Block check : event.blockList())
+        {
+            if(isInfinite(check))
+            {
+                removeInfiniteTracker(check);
+            }
         }
     }
     
