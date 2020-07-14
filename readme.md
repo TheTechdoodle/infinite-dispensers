@@ -1,5 +1,8 @@
 This plugin allows players to create dispensers and droppers that won't run out of items
 
+The wand can be used to quickly identify which dispensers are infinite:
+![Dispensers with slimes inside](https://i.imgur.com/ZdT1WDB.png)
+
 Commands:
  - /infinitedispensers or /infdisp\
    The base command
