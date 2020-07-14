@@ -314,7 +314,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     }
     
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event)
+    private void onPlayerInteract(PlayerInteractEvent event)
     {
         if((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)
                 && isWand(event.getItem()))
@@ -330,7 +330,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     }
     
     @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event)
+    private void onBlockPlace(BlockPlaceEvent event)
     {
         if(isInfiniteItem(event.getItemInHand()))
         {
@@ -374,7 +374,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     }
     
     @EventHandler(ignoreCancelled = true)
-    public void onDispense(BlockDispenseEvent event)
+    private void onDispense(BlockDispenseEvent event)
     {
         if(isInfinite(event.getBlock()))
         {
@@ -420,7 +420,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     }
     
     @EventHandler(ignoreCancelled = true)
-    public void onChunkUnload(ChunkUnloadEvent event)
+    private void onChunkUnload(ChunkUnloadEvent event)
     {
         cleanupChunk(event.getChunk());
         if(infiniteDispensers.containsKey(event.getWorld()))
@@ -438,7 +438,7 @@ public class InfiniteDispensers extends JavaPlugin implements Listener
     }
     
     @EventHandler(ignoreCancelled = true)
-    public void onChunkLoad(ChunkLoadEvent event)
+    private void onChunkLoad(ChunkLoadEvent event)
     {
         cleanupChunk(event.getChunk());
         checkChunk(event.getChunk());
